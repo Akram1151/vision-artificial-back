@@ -39,15 +39,29 @@ For a vehicle / license plate:
   "confidence": <number 0-1>,
   "data": {
     "vehicle": {
-      "license_plate": <string|null>, "country": <string|null>,
+      "license_plate": <string|null>,
+      "plate_visible": <true|false>,
+      "plate_unreadable_reason": <"occluded"|"blurry"|"angle"|"damaged"|"not_present"|null>,
+      "country": <string|null>,
       "vehicle_type": <"car"|"truck"|"motorcycle"|"bus"|"van"|"other"|null>,
       "brand": <string|null>, "model": <string|null>, "color": <string|null>
     },
     "detection": { "bounding_box": { "x": <number>, "y": <number>, "width": <number>, "height": <number> } },
     "raw_text": <string>,
-    "warnings": []
+    "warnings": <string[]>
   }
 }
+
+IMPORTANT rules for vehicle images:
+- If a vehicle IS detected but the license plate is NOT visible or readable:
+  * Set "license_plate" to null
+  * Set "plate_visible" to false
+  * Set "plate_unreadable_reason" to one of: "occluded", "blurry", "angle", "damaged", "not_present"
+  * Add a human-readable explanation to "warnings", e.g. "License plate not visible: plate is occluded by an object"
+- If the plate IS readable:
+  * Set "plate_visible" to true
+  * Set "plate_unreadable_reason" to null
+  * Set "license_plate" to the plate text (uppercase, no spaces)
 
 If the image is neither a receipt nor a vehicle, return:
 { "type": "unknown", "confidence": 0, "data": { "warnings": ["Image does not match any supported type"] } }`
