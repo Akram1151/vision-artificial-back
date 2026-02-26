@@ -1,5 +1,11 @@
-const functions = require('firebase-functions')
+const { onRequest } = require('firebase-functions/v2/https')
+const { defineSecret } = require('firebase-functions/params')
 const app = require('./src/app')
 
-// Exportar la app de Express como una Cloud Function
-exports.api = functions.https.onRequest(app)
+// Define the secret — Firebase will inject it as process.env.OPENAI_API_KEY at runtime
+const openAiApiKey = defineSecret('OPENAI_API_KEY')
+
+exports.api = onRequest(
+  { secrets: [openAiApiKey] },
+  app
+)
