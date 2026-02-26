@@ -42,15 +42,34 @@ async function analyze(req, res) {
     const tickets = results.filter((r) => r.type === 'ticket')
     const vehicles = results.filter((r) => r.type === 'vehicle')
 
-    const totalSpent = tickets.reduce((sum, r) => {
-      return sum + (r.data?.totals?.total || 0)
-    }, 0)
-
     const vehicleTypes = vehicles.reduce((acc, r) => {
       const vType = r.data?.vehicle?.vehicle_type || 'unknown'
       acc[vType] = (acc[vType] || 0) + 1
       return acc
     }, {})
+
+    // Combined total: only when there are multiple tickets AND all share the same currency
+    let combinedTotal = null
+    if (tickets.length > 1) {
+      const currencies = tickets.map((r) => r.data?.ticket?.currency ?? null)
+      const uniqueCurrencies = [...new Set(currencies.filter(Boolean))]
+      const allMatch = uniqueCurrencies.length === 1 && currencies.every(Boolean)
+
+      if (allMatch) {
+        const rawTotal = tickets.reduce((sum, r) => sum + (r.data?.totals?.total || 0), 0)
+        combinedTotal = {
+          amount: Math.round(rawTotal * 100) / 100,
+          currency: uniqueCurrencies[0],
+        }
+      }
+    }
+
+    const summary = {
+      total_tickets: tickets.length,
+      vehicles_detected: vehicles.length,
+      vehicle_types: vehicleTypes,
+      ...(combinedTotal !== null && { combined_total: combinedTotal }),
+    }
 
     return res.json({
       meta: {
@@ -59,12 +78,7 @@ async function analyze(req, res) {
         total_images: files.length,
       },
       results,
-      summary: {
-        total_tickets: tickets.length,
-        total_spent: Math.round(totalSpent * 100) / 100,
-        vehicles_detected: vehicles.length,
-        vehicle_types: vehicleTypes,
-      },
+      summary,
     })
   } catch (error) {
     console.error('Error in analyze controller:', error)

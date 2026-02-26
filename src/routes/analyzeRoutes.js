@@ -111,13 +111,18 @@ const router = express.Router()
  *         summary:
  *           type: object
  *           properties:
- *             total_tickets:      { type: integer, example: 1 }
- *             total_spent:        { type: number,  example: 13.38 }
+ *             total_tickets:      { type: integer, example: 2 }
  *             vehicles_detected:  { type: integer, example: 1 }
  *             vehicle_types:
  *               type: object
  *               additionalProperties: { type: integer }
  *               example: { car: 1 }
+ *             combined_total:
+ *               description: Only present when 2+ tickets share the same currency.
+ *               type: object
+ *               properties:
+ *                 amount:   { type: number, example: 26.76 }
+ *                 currency: { type: string, example: "EUR" }
  *
  *     ErrorResponse:
  *       type: object
@@ -255,7 +260,7 @@ function uploadImages(req, res, next) {
  *                           total: 13.38
  *                         raw_text: "MERCADONA\\nTicket 0042..."
  *                         warnings: []
- *                   summary: { total_tickets: 1, total_spent: 13.38, vehicles_detected: 0, vehicle_types: {} }
+ *                   summary: { total_tickets: 1, vehicles_detected: 0, vehicle_types: {} }
  *               vehicle_result:
  *                 summary: Vehicle detected
  *                 value:
@@ -269,7 +274,7 @@ function uploadImages(req, res, next) {
  *                         detection: { bounding_box: { x: 0.12, y: 0.55, width: 0.40, height: 0.18 } }
  *                         raw_text: "1234ABC"
  *                         warnings: []
- *                   summary: { total_tickets: 0, total_spent: 0, vehicles_detected: 1, vehicle_types: { car: 1 } }
+ *                   summary: { total_tickets: 0, vehicles_detected: 1, vehicle_types: { car: 1 } }
  *       400:
  *         description: No images supplied or invalid file type / size
  *         content:

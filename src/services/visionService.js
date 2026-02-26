@@ -42,13 +42,55 @@ For a receipt / ticket:
 
 IMPORTANT rules for receipt / ticket:
 
-CURRENCY:
-- If the currency is explicitly printed on the receipt (symbol €, $, £, "EUR", "USD", etc.) use that value (ISO 4217 code, e.g. "EUR").
-- If the currency is NOT printed, infer it from the merchant's location context:
-  * Use the address, city, region, country, store name, phone prefix, VAT number format, or any other localisation clue visible on the receipt.
-  * Common mappings: Spain / Andorra → "EUR", UK → "GBP", USA / Canada → "USD" / "CAD", Mexico → "MXN", etc.
-  * Set "currency_inferred" to true and add a warning such as "Currency inferred as EUR from merchant location (Tarragona, Spain)".
-- If currency cannot be determined at all, set "currency" to null and "currency_inferred" to false.
+CURRENCY — follow this strict precedence, stop at the first step that succeeds:
+
+STEP 1 — ISO code printed explicitly (highest confidence):
+  If the receipt contains an explicit 3-letter ISO 4217 code (EUR, USD, GBP, MYR, SAR, etc.)
+  → use it directly, set currency_inferred: false.
+
+STEP 2 — Unambiguous symbol printed:
+  Use the exact symbol→ISO table below. Match only whole tokens (not substrings).
+  Unambiguous symbols:
+    €  → EUR    £  → GBP    ¥  → JPY (if Japan context) or CNY (if China context)
+    ฿  → THB    ₺  → TRY    ₹  → INR    ₩  → KRW    ₪  → ILS
+    ₦  → NGN    ₫  → VND    ₱  → PHP    ₲  → PYG    ₡  → CRC
+    Rp → IDR    kr → SEK/NOK/DKK (use location to disambiguate, see Step 3)
+  If matched → set currency_inferred: false.
+
+STEP 3 — Ambiguous short symbol printed → cross-check with location:
+  These symbols are NOT unique across countries. You MUST use ALL available location
+  evidence (address, city, country, phone prefix, VAT number format, store name,
+  language of the receipt) to pick the correct ISO code.
+  Ambiguous symbol table (examples, not exhaustive):
+    $   → USD (USA) | CAD (Canada) | AUD (Australia) | MXN (Mexico) | CLP (Chile) | ARS (Argentina) | SGD (Singapore) | HKD (Hong Kong) | NZD (New Zealand) | COP (Colombia) | other $ countries
+    RM  → MYR  (Malaysia ONLY — do NOT confuse with SR, Rs, R, or any other symbol)
+    SR  → SAR  (Saudi Arabia) | SCR (Seychelles) — NOT MYR, NOT INR
+    Rs  → INR  (India) | PKR (Pakistan) | NPR (Nepal) | LKR (Sri Lanka) | MUR (Mauritius)
+    R   → ZAR  (South Africa) | BRL context — check location carefully
+    S/. → PEN  (Peru)
+    Bs  → BOB  (Bolivia) | VES (Venezuela)
+    L   → ALL  (Albania) | HNL (Honduras) | MDL (Moldova)
+    kr  → SEK  (Sweden) | NOK (Norway) | DKK (Denmark) | ISK (Iceland) | CZK (Czech Rep.)
+    Fr  → CHF  (Switzerland) | XOF/XAF (West/Central Africa)
+  Rules for ambiguous symbols:
+    a) Read ALL text on the receipt for location clues before deciding.
+    b) If the symbol is RM → currency MUST be MYR, regardless of any other context.
+    c) If the symbol is SR → currency MUST be SAR (or SCR if Seychelles), NEVER MYR.
+    d) Never assign MYR unless the symbol is exactly "RM" or the ISO code "MYR" appears.
+    e) If two location signals conflict, pick the one with higher specificity
+       (explicit country name > city > phone prefix > language).
+    f) Set currency_inferred: false (symbol was printed), but add a warning if
+       the location context is ambiguous, e.g.
+       "Currency resolved as SAR from printed symbol SR (Saudi Arabia context)".
+
+STEP 4 — No symbol or code printed at all → infer from location only:
+  Use address, city, region, country, store name, phone prefix, VAT format, language.
+  Set currency_inferred: true and add a warning, e.g.
+  "Currency inferred as EUR from merchant location (Tarragona, Spain)".
+
+STEP 5 — Cannot determine:
+  Set currency: null, currency_inferred: false.
+  Add a warning: "Currency could not be determined".
 
 TAXES (IVA / VAT / PVP / GST / etc.):
 - Always look for individual tax breakdowns printed on the receipt (lines like "IVA 21%", "IVA 10%", "IVA 4%", "Base imponible", "Cuota IVA", "VAT", "GST", "Tax", etc.).
