@@ -10,7 +10,8 @@
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "swagger:export": "node scripts/export-swagger.js"
   },
   "engines": {
     "node": "20"
@@ -37,7 +38,9 @@
     "express": "^5.2.1",
     "firebase-admin": "^13.6.1",
     "firebase-functions": "^7.0.6",
-    "openai": "^6.25.0"
+    "openai": "^6.25.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -23,15 +23,43 @@ For a receipt / ticket:
   "confidence": <number 0-1>,
   "data": {
     "merchant": { "name": <string|null>, "address": <string|null>, "vat_number": <string|null> },
-    "ticket":   { "date": <"YYYY-MM-DD"|null>, "time": <"HH:MM"|null>, "currency": <string|null> },
+    "ticket":   { "date": <"YYYY-MM-DD"|null>, "time": <"HH:MM"|null>, "currency": <string|null>, "currency_inferred": <true|false> },
     "items": [
       { "name": <string>, "quantity": <number>, "unit_price": <number>, "total_price": <number>, "category": <string>, "confidence": <number 0-1> }
     ],
-    "totals":   { "subtotal": <number|null>, "tax": <number|null>, "total": <number|null> },
+    "totals": {
+      "subtotal":  <number|null>,
+      "tax":       <number|null>,
+      "tax_lines": [
+        { "name": <string>, "rate": <number|null>, "base": <number|null>, "amount": <number|null> }
+      ],
+      "total":     <number|null>
+    },
     "raw_text": <string>,
     "warnings": []
   }
 }
+
+IMPORTANT rules for receipt / ticket:
+
+CURRENCY:
+- If the currency is explicitly printed on the receipt (symbol €, $, £, "EUR", "USD", etc.) use that value (ISO 4217 code, e.g. "EUR").
+- If the currency is NOT printed, infer it from the merchant's location context:
+  * Use the address, city, region, country, store name, phone prefix, VAT number format, or any other localisation clue visible on the receipt.
+  * Common mappings: Spain / Andorra → "EUR", UK → "GBP", USA / Canada → "USD" / "CAD", Mexico → "MXN", etc.
+  * Set "currency_inferred" to true and add a warning such as "Currency inferred as EUR from merchant location (Tarragona, Spain)".
+- If currency cannot be determined at all, set "currency" to null and "currency_inferred" to false.
+
+TAXES (IVA / VAT / PVP / GST / etc.):
+- Always look for individual tax breakdowns printed on the receipt (lines like "IVA 21%", "IVA 10%", "IVA 4%", "Base imponible", "Cuota IVA", "VAT", "GST", "Tax", etc.).
+- For EACH tax line found, add one entry in "tax_lines":
+  * "name":   the label as printed (e.g. "IVA 21%", "VAT 20%", "GST")
+  * "rate":   the percentage as a decimal (e.g. 0.21 for 21%) — null if not specified
+  * "base":   the taxable base amount — null if not specified
+  * "amount": the tax amount charged — null if not specified
+- "tax" in totals must equal the sum of all tax_lines[].amount (or the single tax figure if no breakdown is given).
+- PVP (Precio de Venta al Público) is the final consumer price inclusive of all taxes — map it to "total".
+- If no tax information is present anywhere on the receipt, set "tax" to null and "tax_lines" to [].
 
 For a vehicle / license plate:
 {
