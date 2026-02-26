@@ -88,6 +88,39 @@ El servidor está configurado para aceptar peticiones desde cualquier origen. En
 
 - `npm run dev` - Inicia el servidor en modo desarrollo con nodemon
 - `npm start` - Inicia el servidor en modo producción
+- `npm run serve` - Inicia el emulador de Firebase Functions
+- `npm run deploy` - Despliega a Firebase Cloud Functions
+- `npm run logs` - Ver logs de Firebase Functions
+
+## ☁️ Despliegue en Firebase
+
+Este proyecto está configurado para desplegarse en **Firebase Cloud Functions**.
+
+### Pasos rápidos:
+
+1. **Instala Firebase CLI** (si no lo tienes):
+```bash
+npm install -g firebase-tools
+```
+
+2. **Inicia sesión**:
+```bash
+firebase login
+```
+
+3. **Crea un proyecto** en [Firebase Console](https://console.firebase.google.com/)
+
+4. **Configura el proyecto**:
+   - Edita `.firebaserc` y reemplaza `tu-proyecto-firebase` con tu ID de proyecto
+
+5. **Despliega**:
+```bash
+npm run deploy
+```
+
+Tu API estará disponible en: `https://us-central1-tu-proyecto.cloudfunctions.net/api`
+
+📚 **Para más detalles**, consulta [FIREBASE_DEPLOY.md](FIREBASE_DEPLOY.md)
 
 ## 🤝 Contribución
 

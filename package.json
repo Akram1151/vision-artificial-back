@@ -2,11 +2,18 @@
   "name": "vision-artificial-backend",
   "version": "1.0.0",
   "description": "Backend API para el proyecto Vision Artificial desarrollado con Node.js y Express",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
   },
   "keywords": [
     "nodejs",
@@ -26,7 +33,9 @@
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "firebase-admin": "^13.6.1",
+    "firebase-functions": "^7.0.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
